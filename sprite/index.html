@@ -1,0 +1,280 @@
+
+<html>
+    <head><title>In-Browser Sprite Viewer</title>
+
+    <link rel="stylesheet" type="text/css" href="spriteParser.css" />
+<script type="text/javascript" src="jdataview.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+
+var sprFile = function (data){
+
+    this.sprite = {
+        bytes: data,
+
+        header: data.getString(2),
+
+        version: {
+            major: data.getUint8(),
+            minor: data.getUint8()
+        },
+        
+        imageCount: data.getUint16(),
+        rgbaImageCount: data.getUint16()
+    };
+    this.sprite.images = this.parseImages(this.sprite.imageCount);
+    this.sprite.rgbaImages = this.parseRgbaImages(this.sprite.rgbaImageCount);
+
+    //data.seek(data.length - 1024);
+    
+    this.sprite.palette = this.parsePalette();
+
+};
+
+sprFile.prototype = {
+    
+    parseImages: function(){
+        var images = [];
+        for(var i=0;i<this.sprite.imageCount;i++){
+            images.push(this.parseImage());
+        }
+        return images;
+    },
+
+    parseImage: function(){
+        var image = {
+            size: {
+                x: this.sprite.bytes.getUint16(),
+                y: this.sprite.bytes.getUint16()
+            }
+        }
+
+        image.frameLength = (this.sprite.version.major==0 ? image.size.x * image.size.y: this.sprite.bytes.getUint16());
+
+        imageData = [];
+
+        for(var i=0;i<image.frameLength;i++){
+            val = this.sprite.bytes.getUint8();
+
+            imageData.push(val);
+            
+            if(val==0 && this.sprite.version.major!=0){
+                i++;
+                val = this.sprite.bytes.getUint8();
+
+                if(val<256)
+                    for(var j=1;j<val;j++)
+                        imageData.push(0);
+                else
+                    imageData.push(val);
+            }
+        }
+
+        image.imageData = imageData;
+
+        return image;
+    },
+
+    parseRgbaImages: function(){
+        var images = [];
+        for(var i=0;i<this.sprite.rgbaImageCount;i++){
+            images.push(this.parseRgbaImage());
+        }
+        return images;
+    },
+
+    parseRgbaImage: function(){
+        var image = {
+            size: {
+                x: this.sprite.bytes.getUint16(),
+                y: this.sprite.bytes.getUint16()
+            }
+        }
+        image.frameLength = (image.size.x * image.size.y);
+
+        imageData = [];
+
+        for(var i=0;i<image.frameLength*4;i++){
+            val = this.sprite.bytes.getUint8();
+
+            imageData.push(val);
+        }
+
+        image.imageData = imageData;
+
+        return image;
+    },
+
+    parsePalette: function(){
+        palette = [];
+        
+        for(var i=0;i<256;i++){
+            palette.push({
+                r: this.sprite.bytes.getUint8(),
+                g: this.sprite.bytes.getUint8(),
+                b: this.sprite.bytes.getUint8(),
+                a: 255 - this.sprite.bytes.getUint8()
+            });
+        }
+
+        return palette;
+    }
+    
+}
+
+</script>
+
+<script type="text/javascript">
+var border = true;
+
+$().ready(function(){
+    $('span.filename').click(function(){
+        $('#fileSearch .filename').val($(this).html());
+        $('#fileSearch').submit();
+    });
+
+    $('a').click(function(e){
+        $('canvas').toggleClass('border');
+        border = false;
+        e.preventDefault();
+    });
+
+    var dropbox = $('html')[0];
+    dropbox.addEventListener("dragenter", dragEnter, false);
+    dropbox.addEventListener("dragexit", dragExit, false);
+    dropbox.addEventListener("dragover", dragOver, false);
+    dropbox.addEventListener("drop", drop, false);
+
+    function dragEnter(e){
+        $('#dropBox').css('borderColor', '#777').css('color', '#777');
+        e.stopPropagation();
+        e.preventDefault();
+    }
+
+    function dragExit(e){
+        $('#dropBox').css('borderColor', '#aaa').css('color', '#aaa');
+        e.stopPropagation();
+        e.preventDefault();
+    }
+
+    function dragOver(e){
+        e.stopPropagation();
+        e.preventDefault();
+    }
+
+    function drop(e){
+        $('#dropBox').css('borderColor', '#aaa').css('color', '#aaa');
+        e.stopPropagation();
+        e.preventDefault();
+
+        var files = e.dataTransfer.files;
+        var count = files.length;
+
+        $('#messages').html('Now Loading...');
+        $('canvas, h2, hr, br').remove();
+
+        var reader = new Array();
+        
+        for(i=0;i<files.length;i++){
+            reader[i] = new FileReader();
+
+            reader[i].fileName = files[i].name;
+
+            reader[i].onloadend = function(e){
+                var data = new jDataView(e.target.result);
+
+                parseSprite(data, this.fileName);
+            }
+
+            reader[i].readAsBinaryString(files[i]);
+        }
+    }
+
+    $('#fileSearch').submit(function(e){
+        $('#messages').html('Now Loading...');
+        $('canvas, h2, hr, br').remove();
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", $('#fileSearch .filename').val(), true);
+        xhr.responseType = "arraybuffer";
+
+        xhr.onload = function(e) {
+            var data = new jDataView(xhr.response);
+
+            parseSprite(data, $('#fileSearch .filename').val());
+            
+        };
+
+        xhr.send(null);
+
+        e.preventDefault();
+    });
+
+    function parseSprite(data, fileName){
+        var sprite = new sprFile(data);
+
+        $('body').append('<hr>').append('<h2>' + fileName + '</h2>');
+
+        for(var j=0;j<sprite.sprite.imageCount;j++){
+            var rand = Math.random();
+            $('body').append('<canvas id="sprite' + rand + '_' + j + '" width="' + sprite.sprite.images[j].size.x + '" height="' + sprite.sprite.images[j].size.y + '" class="' + (border?'border':'') + '"></canvas>');
+
+            context = document.getElementById('sprite' + rand + '_' + j).getContext('2d');
+    
+            var pixelData = context.createImageData(sprite.sprite.images[j].size.x, sprite.sprite.images[j].size.y);
+
+            paletteIndex = 0;
+
+            for(var i=0;i<sprite.sprite.images[j].imageData.length;i++){
+                if(sprite.sprite.images[j].imageData[i] != paletteIndex){
+                    paletteIndex = sprite.sprite.images[j].imageData[i];
+                }
+                if(paletteIndex != 0){
+                    pixelData.data[i*4] = sprite.sprite.palette[paletteIndex].r;
+                    pixelData.data[i*4+1] = sprite.sprite.palette[paletteIndex].g;
+                    pixelData.data[i*4+2] = sprite.sprite.palette[paletteIndex].b;
+                    pixelData.data[i*4+3] = sprite.sprite.palette[paletteIndex].a;
+                }
+            }
+
+            context.putImageData(pixelData, 0, 0);
+        }
+        
+        for(var j=0;j<sprite.sprite.rgbaImageCount;j++){
+            var rand = Math.random();
+            $('body').append('<canvas id="sprite' + rand + '_' + j + '" width="' + sprite.sprite.rgbaImages[j].size.x + '" height="' + sprite.sprite.rgbaImages[j].size.y + '" class="' + (border?'border':'') + '"></canvas>');
+
+            context = document.getElementById('sprite' + rand + '_' + j).getContext('2d');
+    
+            var pixelData = context.createImageData(sprite.sprite.rgbaImages[j].size.x, sprite.sprite.rgbaImages[j].size.y);
+
+            for(var i=0;i<sprite.sprite.rgbaImages[j].imageData.length;i++){
+                pixelData.data[i] = sprite.sprite.rgbaImages[j].imageData[i];
+            }
+
+            context.putImageData(pixelData, 0, 0);
+        }
+        
+        $('body').append('<br>');
+
+        $('#messages').html('');
+    }
+});
+
+</script>
+    </head>
+    <body>
+    <h1>In-Browser Sprite Viewer.</h1>
+    <p>Tested in Firefox 6 and Chrome. Feel free to take, modify, whatever the code -- it's all clientside, so you can save it (and the included javascript file) and run it anywhere. You can reach me at <a href="mailto:trojal@uv-ro.com">trojal@uv-ro.com</a>.</p>
+    <div id="dropBox">Drag and drop a .spr file anywhere on the page.</div>
+    <p>Try files: <span class="filename">1_f_01.spr</span>, <span class="filename">1_f_02.spr</span>, <span class="filename">1_f_03.spr</span>, or <span class="filename">1_f_04.spr</span>.</p>
+    <p>Or some bigger files: <span class="filename">vocal.spr</span>, <span class="filename">vorit.spr</span>, <span class="filename">were_wolf.spr</span>, or <span class="filename">whisper.spr</span>.</p>
+    <form action="" method="" id="fileSearch">
+        .spr File URL: <input type="text" name="filename" class="filename" value="1_f_01.spr" />
+        <input type="submit" />
+    </form>
+    <p><a href="">Toggle borders</a></p>
+    <h2 id="messages"></h2>
+    </body>
+</html>
