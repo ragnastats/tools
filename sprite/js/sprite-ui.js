@@ -6,10 +6,16 @@ $().ready(function(){
         $('#fileSearch').submit();
     });
 
-    $('a').click(function(e){
-        $('canvas').toggleClass('border');
+    $('a.borders').click(function(e){
+        $('canvas, img').toggleClass('border');
         border = false;
         e.preventDefault();
+    });
+
+    $('a.export').click(function(event)
+    {
+        event.preventDefault();
+        sprite.export("export");
     });
 
     var dropbox = $('html')[0];
