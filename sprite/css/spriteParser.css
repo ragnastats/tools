@@ -1,4 +1,5 @@
 span.filename {text-decoration: underline;cursor: pointer;}
 canvas {margin: 5px;}
+canvas { display:none; }
 .border {border: solid black 1px;}
 #dropBox {position:absolute;width:120px;height:85px;left:550px;padding-top:30px;background-color:white;border:solid #aaa 2px;text-align:center;color:#aaa;border-radius:45px;-moz-border-radius:45px;-webkit-border-radius:45px;}
