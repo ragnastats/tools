@@ -2,9 +2,10 @@
   "name": "ro-sprite-export",
   "version": "0.0.1",
   "author": "Rachel <rachel@ragnastats.com>",
-  "description": "A little node script to save sprite exports as files",
+  "description": "A little node script to save ragnarok .spr sprites as .png",
   "dependencies" : {
-    "express"   :  "*"
+    "express":  "*",
+    "body-parser": "*"
   },
   "license": "MIT"
 }
