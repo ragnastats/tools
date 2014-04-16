@@ -33,9 +33,23 @@ var sprite = {
         // Build post request
         var request = {};
 
+        $('.sprite').each(function()
+        {
+            var sprite = {
+                name: $(this).find('h2').text(),
+                frames: []
+            };
+
+            $(this).find('img').each(function()
+            {
+                sprite.frames.push($(this).attr('src'));
+            });
+
+            request[sprite.name] = sprite.frames;
+        });
 
         // Post to specified URL
-        $.post(url, request function(response)
+        $.post(url, request, function(response)
         {
 
         });

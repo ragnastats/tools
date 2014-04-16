@@ -50,7 +50,7 @@ $().ready(function(){
         var count = files.length;
 
         $('#messages').html('Now Loading...');
-        $('canvas, h2, hr, br').remove();
+        $('.sprite').remove();
 
         var reader = new Array();
         
@@ -71,7 +71,7 @@ $().ready(function(){
 
     $('#fileSearch').submit(function(e){
         $('#messages').html('Now Loading...');
-        $('canvas, h2, hr, br, img').remove();
+        $('.sprite').remove();
 
         var xhr = new XMLHttpRequest();
         xhr.open("GET", $('#fileSearch .filename').val(), true);
@@ -92,11 +92,11 @@ $().ready(function(){
     function parseSprite(data, fileName){
         var sprite = new sprFile(data);
 
-        $('body').append('<hr>').append('<h2>' + fileName + '</h2>');
+        $('.sprite-queue').append('<hr>').append('<h2>' + fileName + '</h2>');
 
         for(var j=0;j<sprite.sprite.imageCount;j++){
             var rand = Math.random();
-            $('body').append('<canvas id="sprite' + rand + '_' + j + '" width="' + sprite.sprite.images[j].size.x + '" height="' + sprite.sprite.images[j].size.y + '" class="' + (border?'border':'') + '"></canvas>');
+            $('.sprite-queue').append('<canvas id="sprite' + rand + '_' + j + '" width="' + sprite.sprite.images[j].size.x + '" height="' + sprite.sprite.images[j].size.y + '" class="' + (border?'border':'') + '"></canvas>');
 
             context = document.getElementById('sprite' + rand + '_' + j).getContext('2d');
     
@@ -118,12 +118,12 @@ $().ready(function(){
 
             context.putImageData(pixelData, 0, 0);
             var canvas = document.getElementById('sprite' + rand + '_' + j);
-            $('body').append("<img src='"+canvas.toDataURL()+"' class='" + (border?'border':'') + "'>");
+            $('.sprite-queue').append("<img src='"+canvas.toDataURL()+"' class='" + (border?'border':'') + "'>");
         }
         
         for(var j=0;j<sprite.sprite.rgbaImageCount;j++){
             var rand = Math.random();
-            $('body').append('<canvas id="sprite' + rand + '_' + j + '" width="' + sprite.sprite.rgbaImages[j].size.x + '" height="' + sprite.sprite.rgbaImages[j].size.y + '" class="' + (border?'border':'') + '"></canvas>');
+            $('.sprite-queue').append('<canvas id="sprite' + rand + '_' + j + '" width="' + sprite.sprite.rgbaImages[j].size.x + '" height="' + sprite.sprite.rgbaImages[j].size.y + '" class="' + (border?'border':'') + '"></canvas>');
 
             context = document.getElementById('sprite' + rand + '_' + j).getContext('2d');
     
@@ -135,11 +135,18 @@ $().ready(function(){
 
             context.putImageData(pixelData, 0, 0);
             var canvas = document.getElementById('sprite' + rand + '_' + j);
-            $('body').append("<img src='"+canvas.toDataURL()+"' class='" + (border?'border':'') + "'>");
+            $('.sprite-queue').append("<img src='"+canvas.toDataURL()+"' class='" + (border?'border':'') + "'>");
         }
         
-        $('body').append('<br>');
-
+        $('.sprite-queue').append('<br>');
         $('#messages').html('');
+
+        // Terrible hack to put all files into their own container
+        var sprite = $('.sprite-queue').clone();
+        sprite.removeClass('sprite-queue');
+        sprite.addClass('sprite');
+
+        $('body').append(sprite);
+        $('.sprite-queue').html('');
     }
 });
