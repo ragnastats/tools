@@ -15,7 +15,7 @@ $().ready(function(){
     $('a.export').click(function(event)
     {
         event.preventDefault();
-        sprite.export("export");
+        sprite.export(window.location.origin+'/export');
     });
 
     var dropbox = $('html')[0];
