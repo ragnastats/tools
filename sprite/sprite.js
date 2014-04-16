@@ -1,6 +1,7 @@
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
+var $ = require('node-jquery');
 
 app.use(bodyParser({limit: '50mb'}));
 
@@ -13,7 +14,10 @@ app.get('/', function(req, res){
 
 app.post('/export', function(request, response)
 {
-    console.log(request.body);
+    $.each(request.body, function(item, frame)
+    {
+        console.log(item);
+    });
 });
 
 app.listen(1337);

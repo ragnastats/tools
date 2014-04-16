@@ -1,6 +1,9 @@
 var border = true;
 
 $().ready(function(){
+    // Populate export item table on page load
+    sprites.populate();
+    
     $('span.filename').click(function(){
         $('#fileSearch .filename').val("spr/"+$(this).html());
         $('#fileSearch').submit();
@@ -15,7 +18,7 @@ $().ready(function(){
     $('a.export').click(function(event)
     {
         event.preventDefault();
-        sprite.export(window.location.origin+'/export');
+        sprites.export(window.location.origin+'/export');
     });
 
     var dropbox = $('html')[0];

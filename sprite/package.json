@@ -5,7 +5,8 @@
   "description": "A little node script to save ragnarok .spr sprites as .png",
   "dependencies" : {
     "express":  "*",
-    "body-parser": "*"
+    "body-parser": "*",
+    "node-jquery": "*"
   },
   "license": "MIT"
 }

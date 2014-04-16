@@ -4,7 +4,7 @@
  *
  */
 
-var sprite = {
+var sprites = {
     table: {},
 
     populate: function(callback)
@@ -19,7 +19,7 @@ var sprite = {
                 if(/[0-9]+#[^#]+#/.test(item))
                 {
                     item = item.split("#");
-                    sprite.table[item[1]] = item[0];
+                    sprites.table[item[1]] = item[0];
                 }
             });
 
@@ -35,17 +35,22 @@ var sprite = {
 
         $('.sprite').each(function()
         {
-            var sprite = {
-                name: $(this).find('h2').text(),
-                frames: []
-            };
+            var file = $(this).find('h2').text().replace('.spr', '');
 
-            $(this).find('img').each(function()
+            if(typeof sprites.table[file] != "undefined")
             {
-                sprite.frames.push($(this).attr('src'));
-            });
+                var sprite = {
+                    name: sprites.table[file],
+                    frames: []
+                };
 
-            request[sprite.name] = sprite.frames;
+                $(this).find('img').each(function()
+                {
+                    sprite.frames.push($(this).attr('src'));
+                });
+
+                request[sprite.name] = sprite.frames;
+            }
         });
 
         // Post to specified URL
