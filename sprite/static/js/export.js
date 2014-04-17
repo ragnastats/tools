@@ -9,6 +9,7 @@ var sprites = {
     unique: 0,
     length: 0,
 
+    // Hidden friendship function
     populate: function(callback)
     {
         // Load sprite name table
@@ -38,26 +39,23 @@ var sprites = {
     export: function(url)
     {
         // Build post request
-        var request = {};
+        var request = {length: 0};
 
         $('.sprite').each(function()
-        {
+        {            
             var file = $(this).find('h2').text().replace('.spr', '');
 
-            if(typeof sprites.table[file] != "undefined")
+            var sprite = {
+                name: file,
+                frames: []
+            };
+
+            $(this).find('img').each(function()
             {
-                var sprite = {
-                    name: sprites.table[file],
-                    frames: []
-                };
+                sprite.frames.push($(this).attr('src'));
+            });
 
-                $(this).find('img').each(function()
-                {
-                    sprite.frames.push($(this).attr('src'));
-                });
-
-                request[sprite.name] = sprite.frames;
-            }
+            request[sprite.name] = sprite.frames;
         });
 
         // Post to specified URL
