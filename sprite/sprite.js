@@ -16,7 +16,13 @@ app.post('/export', function(request, response)
 {
     $.each(request.body, function(item, frame)
     {
-        console.log(item);
+        var base64Data = frame[0].replace(/^data:image\/png;base64,/,"");
+
+        require("fs").writeFile("export/"+item+".png", base64Data, 'base64', function(err) {
+          console.log(err);
+        });
+        
+        console.log("Saved item: "+item+".png");
     });
 });
 
