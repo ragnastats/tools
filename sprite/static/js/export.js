@@ -6,6 +6,8 @@
 
 var sprites = {
     table: {},
+    unique: 0,
+    length: 0,
 
     populate: function(callback)
     {
@@ -19,7 +21,12 @@ var sprites = {
                 if(/[0-9]+#[^#]+#/.test(item))
                 {
                     item = item.split("#");
+
+                    if(typeof sprites.table[item[1]] == "undefined")
+                        sprites.unique++;
+                    
                     sprites.table[item[1]] = item[0];
+                    sprites.length++;
                 }
             });
 
